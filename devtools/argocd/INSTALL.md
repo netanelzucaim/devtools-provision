@@ -2,6 +2,18 @@
 
 This guide provides step-by-step instructions for installing Argo CD on a Kind (Kubernetes in Docker) cluster with access via port-forward on localhost:8080.
 
+## About Versions
+
+This setup uses:
+- **Argo CD v2.13.0** - The actual Argo CD application/software version
+- **Helm Chart 7.7.5** - The packaging and deployment configuration version
+
+These are two different version numbers:
+- The **application version** (v2.13.0) is the version of Argo CD software itself
+- The **Helm chart version** (7.7.5) is the version of the Helm chart that packages and deploys Argo CD
+
+Both versions are tested to work together and are suitable for Kind cluster deployments.
+
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Kind Cluster Setup](#kind-cluster-setup)

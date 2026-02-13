@@ -12,6 +12,10 @@ This repository contains configuration files, Helm charts, and setup guides for 
 
 Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes. This repository includes a complete Helm-based setup for running Argo CD on a Kind (Kubernetes in Docker) cluster.
 
+**Version Information:**
+- **Argo CD Application:** v2.13.0
+- **Helm Chart:** 7.7.5
+
 **Features:**
 - Optimized for local Kind cluster development
 - Accessible via port-forward on localhost:8080
