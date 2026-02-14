@@ -133,34 +133,19 @@ kubectl get nodes
 
 ## Install Woodpecker CI with Helm
 
-### Step 1: Add Woodpecker CI Helm Repository
-
-```bash
-helm repo add woodpecker https://woodpecker-ci.org/
-helm repo update
-```
-
-### Step 2: Create Namespace
+### Step 1: Create Namespace
 
 ```bash
 kubectl create namespace woodpecker
 ```
 
-### Step 3: Navigate to Charts Directory
+### Step 2: Navigate to Charts Directory
 
 ```bash
 cd devtools/woodpecker/charts
 ```
 
-### Step 4: Update Helm Dependencies
-
-```bash
-helm dependency update
-```
-
-This command downloads the Woodpecker CI chart specified in `Chart.yaml`.
-
-### Step 5: Configure Agent Secret (IMPORTANT!)
+### Step 3: Configure Agent Secret (IMPORTANT!)
 
 **⚠️ SECURITY WARNING:** The default `values.yaml` contains a placeholder agent secret (`changeme`) that MUST be changed before production use.
 
@@ -175,8 +160,8 @@ echo "Generated Agent Secret: $AGENT_SECRET"
 helm install woodpecker . \
   --namespace woodpecker \
   --create-namespace \
-  --set woodpecker.server.env.WOODPECKER_AGENT_SECRET="$AGENT_SECRET" \
-  --set woodpecker.agent.env.WOODPECKER_AGENT_SECRET="$AGENT_SECRET" \
+  --set server.env.WOODPECKER_AGENT_SECRET="$AGENT_SECRET" \
+  --set agent.env.WOODPECKER_AGENT_SECRET="$AGENT_SECRET" \
   --wait
 
 # Option 2: Edit values.yaml manually
@@ -185,9 +170,9 @@ helm install woodpecker . \
 
 **Note:** The agent secret must match between the server and agent configurations.
 
-### Step 6: Install Woodpecker CI (Basic Installation)
+### Step 4: Install Woodpecker CI (Basic Installation)
 
-If you're just testing locally and didn't set a custom secret in Step 5:
+If you're just testing locally and didn't set a custom secret in Step 3:
 
 ```bash
 helm install woodpecker . \
@@ -204,7 +189,7 @@ helm install my-woodpecker . \
   --wait
 ```
 
-### Step 7: Wait for Pods to be Ready
+### Step 5: Wait for Pods to be Ready
 
 ```bash
 kubectl wait --for=condition=ready pod \

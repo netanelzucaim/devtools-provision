@@ -5,51 +5,61 @@
 # for demonstration purposes. For production use, you MUST change this to a secure,
 # randomly generated secret. Generate one with: openssl rand -hex 32
 
-woodpecker:
-  server:
-    env:
-      WOODPECKER_HOST: http://localhost:9000
-      WOODPECKER_ADMIN: netanelzucaim  # CHANGE THIS to your GitHub username
-      WOODPECKER_OPEN: true
-      WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
-      # GitHub OAuth (update with your credentials)
-      # WOODPECKER_GITHUB: "true"
-      # WOODPECKER_GITHUB_CLIENT: "your-github-client-id"
-      # WOODPECKER_GITHUB_SECRET: "your-github-client-secret"
-    
-    service:
-      type: ClusterIP
-      port: 8000
-    
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
-    
-    persistentVolume:
-      enabled: true
-      size: 10Gi
-      storageClass: standard
-
-  agent:
+server:
+  image:
+    repository: woodpeckerci/woodpecker-server
+    tag: v2.7.0
+    pullPolicy: IfNotPresent
+  
+  replicas: 1
+  
+  env:
+    WOODPECKER_HOST: http://localhost:9000
+    WOODPECKER_ADMIN: netanelzucaim  # CHANGE THIS to your GitHub username
+    WOODPECKER_OPEN: "true"
+    WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
+    # GitHub OAuth (update with your credentials)
+    # WOODPECKER_GITHUB: "true"
+    # WOODPECKER_GITHUB_CLIENT: "your-github-client-id"
+    # WOODPECKER_GITHUB_SECRET: "your-github-client-secret"
+  
+  service:
+    type: ClusterIP
+    port: 8000
+    httpPort: 8000
+    grpcPort: 9000
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  
+  persistence:
     enabled: true
-    replicaCount: 2
-    
-    env:
-      WOODPECKER_SERVER: woodpecker-server:9000
-      WOODPECKER_AGENT_SECRET: changeme  # MUST match server secret! Change both!
-    
-    resources:
-      limits:
-        cpu: 1000m
-        memory: 1Gi
-      requests:
-        cpu: 100m
-        memory: 128Mi
+    size: 10Gi
+    storageClass: standard
+    accessMode: ReadWriteOnce
 
-  # SQLite for local development (can be changed to PostgreSQL for production)
-  database:
-    type: sqlite
+agent:
+  enabled: true
+  replicaCount: 2
+  
+  image:
+    repository: woodpeckerci/woodpecker-agent
+    tag: v2.7.0
+    pullPolicy: IfNotPresent
+  
+  env:
+    WOODPECKER_SERVER: woodpecker-server:9000
+    WOODPECKER_AGENT_SECRET: changeme  # MUST match server secret! Change both!
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi

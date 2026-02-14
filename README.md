@@ -97,21 +97,14 @@ kind create cluster --name woodpecker-cluster
 # 2. Navigate to the Woodpecker CI charts directory
 cd devtools/woodpecker/charts
 
-# 3. Add Woodpecker CI Helm repository
-helm repo add woodpecker https://woodpecker-ci.org/
-helm repo update
-
-# 4. Update Helm dependencies
-helm dependency update
-
-# 5. Install Woodpecker CI
+# 3. Install Woodpecker CI
 kubectl create namespace woodpecker
 helm install woodpecker . --namespace woodpecker --wait
 
-# 6. Set up port-forward to access the UI
+# 4. Set up port-forward to access the UI
 kubectl port-forward svc/woodpecker-server -n woodpecker 9000:8000
 
-# 7. Access the UI at http://localhost:9000
+# 5. Access the UI at http://localhost:9000
 # Register as a new user or configure GitHub OAuth
 ```
 
@@ -120,18 +113,25 @@ For detailed instructions, troubleshooting, and GitHub OAuth setup, see the [Woo
 ## Repository Structure
 
 ```
-devtools/
-├── argocd/
-│   ├── charts/
-│   │   ├── Chart.yaml       # Helm chart definition with dependencies
-│   │   └── values.yaml      # Custom configuration values for Argo CD
-│   └── INSTALL.md           # Comprehensive installation guide
-├── woodpecker/
-│   ├── charts/
-│   │   ├── Chart.yaml       # Helm chart definition with dependencies
-│   │   └── values.yaml      # Custom configuration values for Woodpecker CI
-│   └── INSTALL.md           # Comprehensive installation guide
-└── applicationset.yaml      # ApplicationSet for GitOps auto-deployment
+.
+├── application.yaml         # Argo CD Application to deploy the ApplicationSet
+└── devtools/
+    ├── applicationset.yaml  # ApplicationSet for GitOps auto-deployment
+    ├── argocd/
+    │   ├── charts/
+    │   │   ├── Chart.yaml       # Helm chart definition with dependencies
+    │   │   └── values.yaml      # Custom configuration values for Argo CD
+    │   └── INSTALL.md           # Comprehensive installation guide
+    └── woodpecker/
+        ├── charts/
+        │   ├── Chart.yaml       # Helm chart definition (standalone)
+        │   ├── values.yaml      # Custom configuration values for Woodpecker CI
+        │   └── templates/       # Kubernetes manifests templates
+        │       ├── agent-deployment.yaml
+        │       ├── server-deployment.yaml
+        │       ├── server-pvc.yaml
+        │       └── server-service.yaml
+        └── INSTALL.md           # Comprehensive installation guide
 ```
 
 ## GitOps Automation with ApplicationSet
@@ -150,7 +150,10 @@ This repository includes an ApplicationSet that automatically discovers and depl
 Once Argo CD is installed, deploy the ApplicationSet to enable automatic management of all devtools:
 
 ```bash
-# Apply the ApplicationSet
+# Option 1: Bootstrap by applying the Application that deploys the ApplicationSet
+kubectl apply -f application.yaml
+
+# Option 2: Apply the ApplicationSet directly
 kubectl apply -f devtools/applicationset.yaml
 
 # Verify ApplicationSet is created
@@ -164,6 +167,8 @@ The ApplicationSet will automatically:
 - Deploy Argo CD to the `argocd` namespace
 - Deploy Woodpecker CI to the `woodpecker` namespace
 - Deploy any future tools added to `devtools/` with a `charts/` folder
+
+**Recommended Approach:** Use `application.yaml` to bootstrap the ApplicationSet. This creates an Argo CD Application that manages the ApplicationSet itself, providing full GitOps workflow for the entire devtools infrastructure.
 
 ### Benefits
 
