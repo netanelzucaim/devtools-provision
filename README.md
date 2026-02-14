@@ -115,8 +115,8 @@ For detailed instructions, troubleshooting, and GitHub OAuth setup, see the [Woo
 ```
 .
 ├── application.yaml         # Argo CD Application to deploy the ApplicationSet
+├── applicationset.yaml      # ApplicationSet for GitOps auto-deployment
 └── devtools/
-    ├── applicationset.yaml  # ApplicationSet for GitOps auto-deployment
     ├── argocd/
     │   ├── charts/
     │   │   ├── Chart.yaml       # Helm chart definition with dependencies
@@ -154,7 +154,7 @@ Once Argo CD is installed, deploy the ApplicationSet to enable automatic managem
 kubectl apply -f application.yaml
 
 # Option 2: Apply the ApplicationSet directly
-kubectl apply -f devtools/applicationset.yaml
+kubectl apply -f applicationset.yaml
 
 # Verify ApplicationSet is created
 kubectl get applicationset -n argocd

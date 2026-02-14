@@ -32,6 +32,7 @@ Both versions are tested to work together and are suitable for Kind cluster depl
 - [Install Woodpecker CI with Helm](#install-woodpecker-ci-with-helm)
 - [Access Woodpecker UI](#access-woodpecker-ui)
 - [GitHub OAuth Setup (Optional)](#github-oauth-setup-optional)
+- [Connect to a Public GitHub Repository](#connect-to-a-public-github-repository)
 - [Create Your First Pipeline](#create-your-first-pipeline)
 - [Verification](#verification)
 - [Useful Commands](#useful-commands)
@@ -287,6 +288,163 @@ kubectl port-forward svc/woodpecker-server -n woodpecker 9000:8000
 ```
 
 Navigate to http://localhost:9000 and click "Login" to authenticate via GitHub.
+
+## Connect to a Public GitHub Repository
+
+This section provides a detailed step-by-step guide for connecting Woodpecker CI to a public GitHub repository and setting up your first CI pipeline.
+
+### Prerequisites
+
+Before connecting a repository, ensure:
+- Woodpecker CI is installed and running
+- You can access the Woodpecker UI at http://localhost:9000
+- Port-forward is active: `kubectl port-forward svc/woodpecker-server -n woodpecker 9000:8000`
+- You have a GitHub account
+- You have a public GitHub repository to connect
+
+### Step 1: Configure GitHub OAuth (Required for Repository Access)
+
+To connect GitHub repositories, you must set up GitHub OAuth authentication:
+
+1. **Create a GitHub OAuth Application:**
+   - Go to GitHub: Settings → Developer settings → OAuth Apps → [New OAuth App](https://github.com/settings/applications/new)
+   - Fill in the application details:
+     - **Application name:** `Woodpecker CI Local` (or any name you prefer)
+     - **Homepage URL:** `http://localhost:9000`
+     - **Authorization callback URL:** `http://localhost:9000/authorize`
+   - Click **"Register application"**
+   - **Copy the Client ID** (you'll use this in the next step)
+   - Click **"Generate a new client secret"**
+   - **Copy the Client Secret immediately** (you won't see it again!)
+
+2. **Update Woodpecker Configuration:**
+
+   Edit `devtools/woodpecker/charts/values.yaml`:
+
+   ```yaml
+   server:
+     env:
+       WOODPECKER_HOST: http://localhost:9000
+       WOODPECKER_ADMIN: your-github-username  # Your GitHub username
+       WOODPECKER_OPEN: "false"  # Disable open registration for security
+       WOODPECKER_AGENT_SECRET: changeme  # Use a secure secret in production
+       # GitHub OAuth - Add these lines
+       WOODPECKER_GITHUB: "true"
+       WOODPECKER_GITHUB_CLIENT: "your-github-client-id"  # From step 1
+       WOODPECKER_GITHUB_SECRET: "your-github-client-secret"  # From step 1
+   ```
+
+3. **Upgrade the Helm Release:**
+
+   ```bash
+   cd devtools/woodpecker/charts
+   helm upgrade woodpecker . --namespace woodpecker --wait
+   ```
+
+   Wait for the pods to restart:
+   ```bash
+   kubectl rollout status deployment/woodpecker-server -n woodpecker
+   ```
+
+4. **Restart Port-Forward:**
+
+   Stop the existing port-forward (Ctrl+C) and restart it:
+   ```bash
+   kubectl port-forward svc/woodpecker-server -n woodpecker 9000:8000
+   ```
+
+### Step 2: Log In to Woodpecker with GitHub
+
+1. Open your browser and navigate to http://localhost:9000
+2. Click the **"Login"** button
+3. You'll be redirected to GitHub for authorization
+4. Click **"Authorize"** to grant Woodpecker access to your GitHub account
+5. You'll be redirected back to Woodpecker and logged in
+
+**Note:** The user specified in `WOODPECKER_ADMIN` will automatically have admin privileges in Woodpecker.
+
+### Step 3: Activate Your Public Repository
+
+1. **Navigate to Repositories:**
+   - In the Woodpecker UI, click on **"Repositories"** in the top menu
+   - You should see a list of all your GitHub repositories (both public and private)
+
+2. **Find Your Public Repository:**
+   - Scroll through the list or use the search box
+   - Look for the repository you want to connect (e.g., `your-username/my-project`)
+
+3. **Activate the Repository:**
+   - Click the **toggle switch** (or "Enable" button) next to your repository name
+   - The repository status should change to "Active"
+   - Woodpecker will automatically set up a webhook in your GitHub repository
+
+4. **Verify Webhook Creation:**
+   - Go to your GitHub repository: Settings → Webhooks
+   - You should see a new webhook pointing to `http://localhost:9000/hook`
+   - **Note:** This webhook won't work from GitHub's servers since localhost is not accessible externally
+   - For local development, you can manually trigger builds or push to the repository
+
+### Step 4: Configure Repository Settings (Optional)
+
+After activating the repository, you can configure additional settings:
+
+1. Click on the repository name in Woodpecker
+2. Go to **Settings**
+3. Configure options such as:
+   - **Trusted:** Allow the repository to use privileged plugins
+   - **Protected:** Require approval for builds from external contributors
+   - **Timeout:** Set maximum build duration
+   - **Secrets:** Add environment variables for your builds
+
+### Step 5: Verify Connection
+
+To verify the repository is properly connected:
+
+1. Go to your repository page in Woodpecker
+2. You should see:
+   - Repository name and description
+   - Branch information
+   - A message indicating no builds have run yet
+
+### Important Notes for Local Development
+
+**Webhook Limitations:**
+Since Woodpecker is running on localhost (port 9000), GitHub cannot send webhook events to it. This means:
+- Automatic builds won't trigger on push/pull request events
+- You'll need to manually trigger builds or use other methods
+
+**Workarounds:**
+
+1. **Manual Build Trigger:**
+   - You can manually trigger builds through the Woodpecker UI
+   - Go to your repository → Click "New Build" → Select branch
+
+2. **Use GitHub Actions to Proxy (Advanced):**
+   - Set up GitHub Actions to forward webhook events to your local Woodpecker
+   - This is complex and beyond the scope of local development
+
+3. **Deploy to Accessible URL:**
+   - For production use, deploy Woodpecker to a publicly accessible URL
+   - Update `WOODPECKER_HOST` to your public URL
+   - Update GitHub OAuth callback URL accordingly
+   - Webhooks will work automatically
+
+### Troubleshooting Repository Connection
+
+**Problem:** Repository list is empty
+- **Solution:** Ensure GitHub OAuth is configured correctly and you've authorized the application
+- Check that `WOODPECKER_GITHUB` is set to `"true"` in values.yaml
+- Verify your Client ID and Secret are correct
+
+**Problem:** Can't activate repository
+- **Solution:** Check Woodpecker server logs: `kubectl logs -n woodpecker -l app=woodpecker-server`
+- Ensure you have admin access to the GitHub repository
+- Verify the OAuth app has necessary permissions
+
+**Problem:** Webhook shows as failing in GitHub
+- **Solution:** This is expected for localhost deployments - GitHub can't reach localhost
+- For local testing, use manual build triggers
+- For production, deploy to a publicly accessible URL
 
 ## Create Your First Pipeline
 

@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/netanelzucaim/devtools-provision.git
     targetRevision: main
-    path: devtools
+    path: .
     directory:
       include: applicationset.yaml
   destination:
