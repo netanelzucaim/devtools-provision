@@ -4,3 +4,4 @@ description: Argo CD - Declarative GitOps CD for Kubernetes
 type: application
 version: 1.0.0
 appVersion: "v2.13.0"  # Argo CD application version (the actual software)
+
