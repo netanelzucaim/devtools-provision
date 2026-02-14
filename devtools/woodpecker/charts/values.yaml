@@ -1,0 +1,51 @@
+# Custom values for Woodpecker CI Helm chart - Portable Configuration
+# Works on any network using port-forward to localhost:9000
+
+woodpecker:
+  server:
+    env:
+      WOODPECKER_HOST: http://localhost:9000
+      WOODPECKER_ADMIN: netanelzucaim
+      WOODPECKER_OPEN: true
+      WOODPECKER_AGENT_SECRET: changeme
+      # GitHub OAuth (update with your credentials)
+      # WOODPECKER_GITHUB: "true"
+      # WOODPECKER_GITHUB_CLIENT: "your-github-client-id"
+      # WOODPECKER_GITHUB_SECRET: "your-github-client-secret"
+    
+    service:
+      type: ClusterIP
+      port: 8000
+    
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    
+    persistentVolume:
+      enabled: true
+      size: 10Gi
+      storageClass: standard
+
+  agent:
+    enabled: true
+    replicaCount: 2
+    
+    env:
+      WOODPECKER_SERVER: woodpecker-server:9000
+      WOODPECKER_AGENT_SECRET: changeme
+    
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  # SQLite for local development (can be changed to PostgreSQL for production)
+  database:
+    type: sqlite

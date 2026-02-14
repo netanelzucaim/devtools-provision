@@ -1,0 +1,11 @@
+apiVersion: v2
+name: woodpecker
+description: Woodpecker CI - A simple CI engine with great extensibility
+type: application
+version: 1.0.0
+appVersion: "v2.7.0"  # Woodpecker CI application version
+
+dependencies:
+  - name: woodpecker
+    version: 1.6.0  # Helm chart version
+    repository: https://woodpecker-ci.org/
