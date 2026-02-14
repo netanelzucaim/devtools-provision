@@ -19,7 +19,7 @@ spec:
       source:
         repoURL: https://github.com/netanelzucaim/devtools-provision.git
         targetRevision: main
-        path: '{{path}}/charts'
+        path: '{{path}}'
         helm:
           valueFiles:
             - values.yaml
