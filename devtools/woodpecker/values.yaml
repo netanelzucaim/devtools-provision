@@ -16,12 +16,12 @@ server:
   env:
     WOODPECKER_HOST: http://localhost:9000
     WOODPECKER_ADMIN: netanelzucaim  # CHANGE THIS to your GitHub username
-    WOODPECKER_OPEN: "true"
+    WOODPECKER_OPEN: "false"
     WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
-    # GitHub OAuth (update with your credentials)
-    # WOODPECKER_GITHUB: "true"
-    # WOODPECKER_GITHUB_CLIENT: "your-github-client-id"
-    # WOODPECKER_GITHUB_SECRET: "your-github-client-secret"
+    # GitHub OAuth Configuration
+    WOODPECKER_GITHUB: "true"
+    WOODPECKER_GITHUB_CLIENT: "Iv23liseFiOKeDH5ktZy"  # Get from GitHub OAuth App settings
+    WOODPECKER_GITHUB_SECRET: "###"  # Get from GitHub OAuth App settings
   
   service:
     type: ClusterIP
