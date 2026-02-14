@@ -1,13 +1,17 @@
 # Custom values for Woodpecker CI Helm chart - Portable Configuration
 # Works on any network using port-forward to localhost:9000
 
+# SECURITY WARNING: The WOODPECKER_AGENT_SECRET below is set to a default value
+# for demonstration purposes. For production use, you MUST change this to a secure,
+# randomly generated secret. Generate one with: openssl rand -hex 32
+
 woodpecker:
   server:
     env:
       WOODPECKER_HOST: http://localhost:9000
       WOODPECKER_ADMIN: netanelzucaim
       WOODPECKER_OPEN: true
-      WOODPECKER_AGENT_SECRET: changeme
+      WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
       # GitHub OAuth (update with your credentials)
       # WOODPECKER_GITHUB: "true"
       # WOODPECKER_GITHUB_CLIENT: "your-github-client-id"
@@ -36,7 +40,7 @@ woodpecker:
     
     env:
       WOODPECKER_SERVER: woodpecker-server:9000
-      WOODPECKER_AGENT_SECRET: changeme
+      WOODPECKER_AGENT_SECRET: changeme  # MUST match server secret! Change both!
     
     resources:
       limits:

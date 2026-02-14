@@ -14,6 +14,16 @@ These are two different version numbers:
 
 Both versions are tested to work together and are suitable for Kind cluster deployments.
 
+## Security Considerations
+
+**⚠️ Important Security Notes:**
+
+1. **Agent Secret:** The default configuration includes a placeholder agent secret (`changeme`). This MUST be changed to a secure, randomly generated value before any production use. See Step 5 of the installation for instructions.
+
+2. **GitHub OAuth:** If using GitHub OAuth, protect your client ID and secret. Never commit these to version control.
+
+3. **Local Development Only:** This guide is optimized for local development with Kind. For production deployments, additional security measures are required (TLS, proper authentication, network policies, etc.).
+
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Kind Cluster Setup](#kind-cluster-setup)
@@ -148,7 +158,34 @@ helm dependency update
 
 This command downloads the Woodpecker CI chart specified in `Chart.yaml`.
 
-### Step 5: Install Woodpecker CI
+### Step 5: Configure Agent Secret (IMPORTANT!)
+
+**⚠️ SECURITY WARNING:** The default `values.yaml` contains a placeholder agent secret (`changeme`) that MUST be changed before production use.
+
+For local development/testing, you can proceed with the default value, but for any real use, generate a secure secret:
+
+```bash
+# Generate a secure random secret
+AGENT_SECRET=$(openssl rand -hex 32)
+echo "Generated Agent Secret: $AGENT_SECRET"
+
+# Option 1: Set via command line during install (recommended)
+helm install woodpecker . \
+  --namespace woodpecker \
+  --create-namespace \
+  --set woodpecker.server.env.WOODPECKER_AGENT_SECRET="$AGENT_SECRET" \
+  --set woodpecker.agent.env.WOODPECKER_AGENT_SECRET="$AGENT_SECRET" \
+  --wait
+
+# Option 2: Edit values.yaml manually
+# Replace 'changeme' with your generated secret in both server and agent sections
+```
+
+**Note:** The agent secret must match between the server and agent configurations.
+
+### Step 6: Install Woodpecker CI (Basic Installation)
+
+If you're just testing locally and didn't set a custom secret in Step 5:
 
 ```bash
 helm install woodpecker . \
@@ -165,7 +202,7 @@ helm install my-woodpecker . \
   --wait
 ```
 
-### Step 6: Wait for Pods to be Ready
+### Step 7: Wait for Pods to be Ready
 
 ```bash
 kubectl wait --for=condition=ready pod \
