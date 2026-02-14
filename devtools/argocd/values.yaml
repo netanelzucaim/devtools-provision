@@ -17,6 +17,10 @@ argo-cd:
   configs:
     params:
       server.insecure: true
+
+    cm:
+      # This enables the admin account to generate API tokens
+      accounts.admin: "apiKey, login"
     
     # Pre-configured repository connection
     repositories:
