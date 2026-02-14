@@ -4,8 +4,3 @@ description: Woodpecker CI - A simple CI engine with great extensibility
 type: application
 version: 1.0.0
 appVersion: "v2.7.0"
-
-dependencies:
-  - name: woodpecker
-    version: "0.1.0"
-    repository: "file://../charts/woodpecker"
