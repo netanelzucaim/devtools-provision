@@ -1,0 +1,56 @@
+# Custom values for Argo CD Helm chart - Portable Configuration
+# Works on any network using port-forward to localhost:8080
+
+argo-cd:
+  global:
+    domain: localhost:8080
+  
+  server:
+    service:
+      type: ClusterIP  # Use port-forward instead of NodePort
+    extraArgs:
+      - --insecure  # Run server without TLS (use only for development)
+  
+  redis:
+    enabled: true
+  
+  configs:
+    params:
+      server.insecure: true
+    
+    # Pre-configured repository connection
+    repositories:
+      devtools-provision:
+        url: https://github.com/netanelzucaim/devtools-provision.git
+        type: git
+        name: devtools-provision
+  
+  controller:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+  
+  repoServer:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+  
+  applicationSet:
+    enabled: true
+  
+  # Disable unnecessary components for local development
+  dex:
+    enabled: false
+  
+  notifications:
+    enabled: false
