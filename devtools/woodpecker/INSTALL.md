@@ -20,9 +20,11 @@ Both versions are tested to work together and are suitable for Kind cluster depl
 
 1. **Agent Secret:** The default configuration includes a placeholder agent secret (`changeme`). This MUST be changed to a secure, randomly generated value before any production use. See Step 5 of the installation for instructions.
 
-2. **GitHub OAuth:** If using GitHub OAuth, protect your client ID and secret. Never commit these to version control.
+2. **Admin Username:** The default configuration specifies `netanelzucaim` as the admin user. Change this to your own GitHub username in `values.yaml` (WOODPECKER_ADMIN) to grant yourself admin privileges.
 
-3. **Local Development Only:** This guide is optimized for local development with Kind. For production deployments, additional security measures are required (TLS, proper authentication, network policies, etc.).
+3. **GitHub OAuth:** If using GitHub OAuth, protect your client ID and secret. Never commit these to version control.
+
+4. **Local Development Only:** This guide is optimized for local development with Kind. For production deployments, additional security measures are required (TLS, proper authentication, network policies, etc.).
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
@@ -246,7 +248,7 @@ kubectl port-forward svc/woodpecker-server -n woodpecker 9000:8000 > /dev/null 2
 1. Open your browser and navigate to: **http://localhost:9000**
 2. On first access, you'll be prompted to log in
 3. Since `WOODPECKER_OPEN` is set to `true`, you can register as a new user
-4. The user `netanelzucaim` will automatically be granted admin privileges
+4. The user specified in `WOODPECKER_ADMIN` (default: `netanelzucaim`) will automatically be granted admin privileges. **Update this in `values.yaml` to your GitHub username before installation.**
 
 ### Step 3: Log In
 
@@ -277,9 +279,9 @@ woodpecker:
   server:
     env:
       WOODPECKER_HOST: http://localhost:9000
-      WOODPECKER_ADMIN: netanelzucaim
+      WOODPECKER_ADMIN: your-github-username  # Change to your GitHub username
       WOODPECKER_OPEN: false  # Disable open registration
-      WOODPECKER_AGENT_SECRET: changeme
+      WOODPECKER_AGENT_SECRET: changeme  # Generate a secure secret!
       # GitHub OAuth
       WOODPECKER_GITHUB: "true"
       WOODPECKER_GITHUB_CLIENT: "your-github-client-id"
