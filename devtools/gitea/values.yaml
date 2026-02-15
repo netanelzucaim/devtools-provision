@@ -72,9 +72,13 @@ gitea:
       ENABLE: true
 
   # Admin user configuration (created on first startup)
+  # ⚠️ SECURITY WARNING: The default password below is insecure!
+  # ALWAYS change this to a secure password, even for local development.
+  # Generate one with: openssl rand -base64 32
+  # Or use --set gitea.admin.password="your-secure-password" during installation
   admin:
     username: gitea_admin
-    password: changeme  # CHANGE THIS! Generate with: openssl rand -base64 32
+    password: changeme  # ⚠️ CHANGE THIS IMMEDIATELY!
     email: admin@example.com
 
   # Resource limits

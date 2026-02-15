@@ -6,11 +6,11 @@ This guide provides step-by-step instructions for installing Gitea on a Kind (Ku
 
 This setup uses:
 - **Gitea v1.22.0** - The actual Gitea application/software version
-- **Helm Chart 10.4.0** - The packaging and deployment configuration version
+- **Helm Chart 1.0.0** - This custom chart version
 
 These are two different version numbers:
 - The **application version** (v1.22.0) is the version of Gitea software itself
-- The **Helm chart version** (10.4.0) is the version of the Helm chart that packages and deploys Gitea
+- The **Helm chart version** (1.0.0) is the version of this custom Helm chart that deploys Gitea
 
 Both versions are tested to work together and are suitable for Kind cluster deployments.
 
@@ -18,7 +18,7 @@ Both versions are tested to work together and are suitable for Kind cluster depl
 
 **⚠️ Important Security Notes:**
 
-1. **Admin Password:** The default configuration includes a placeholder admin password (`changeme`). This MUST be changed to a secure value before any production use.
+1. **Admin Password:** The default configuration includes a placeholder admin password (`changeme`). **This is a well-known weak credential and MUST be changed immediately, even for local development.** Generate a secure password using the installation commands below.
 
 2. **Secret Keys:** Gitea will auto-generate SECRET_KEY and INTERNAL_TOKEN on first startup. For production, you should set these explicitly.
 
@@ -153,22 +153,15 @@ cd devtools/gitea
 
 ### Step 3: Install Gitea
 
-**Option 1: Basic Installation (using default values)**
+**⚠️ SECURITY WARNING:** Do not use the default admin password! Always generate a secure password.
 
-```bash
-helm install gitea . \
-  --namespace gitea \
-  --create-namespace \
-  --wait
-```
-
-**Option 2: Installation with Custom Admin Password (Recommended)**
+**Recommended Installation (with secure password):**
 
 Generate a secure password first:
 ```bash
 GITEA_ADMIN_PASSWORD=$(openssl rand -base64 32)
 echo "Generated Admin Password: $GITEA_ADMIN_PASSWORD"
-echo "Save this password! You'll need it to log in."
+echo "IMPORTANT: Save this password! You'll need it to log in."
 
 helm install gitea . \
   --namespace gitea \
@@ -177,11 +170,21 @@ helm install gitea . \
   --wait
 ```
 
-**Alternative:** Install with custom release name:
+**Alternative: Basic Installation** (will use default password - change immediately after install):
+
+```bash
+helm install gitea . \
+  --namespace gitea \
+  --create-namespace \
+  --wait
+```
+
+**Custom Release Name:**
 ```bash
 helm install my-gitea . \
   --namespace gitea \
   --create-namespace \
+  --set gitea.admin.password="$(openssl rand -base64 32)" \
   --wait
 ```
 
