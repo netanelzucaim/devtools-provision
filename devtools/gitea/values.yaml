@@ -34,6 +34,9 @@ gitea:
       START_SSH_SERVER: true
       LFS_START_SERVER: true
     
+    log:
+      LEVEL: Debug
+    
     database:
       DB_TYPE: sqlite3
       PATH: /data/gitea.db
