@@ -15,7 +15,7 @@ woodpecker:
     replicas: 1
     
     env:
-      WOODPECKER_HOST: http://localhost:9000
+      WOODPECKER_HOST: http://localhost:8000
       WOODPECKER_ADMIN: netanelzucaim  # CHANGE THIS to your GitHub username
       WOODPECKER_OPEN: "false"
       WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
@@ -46,7 +46,7 @@ woodpecker:
 
   agent:
     enabled: true
-    replicaCount: 2
+    replicaCount: 1
     
     image:
       repository: woodpeckerci/woodpecker-agent
