@@ -15,7 +15,7 @@ woodpecker:
     replicas: 1
     
     env:
-      WOODPECKER_HOST: https://accomplish-important-depends-monitoring.trycloudflare.com
+      WOODPECKER_HOST: https://selling-adrian-nose-rated.trycloudflare.com 
       WOODPECKER_ADMIN: netanelzucaim  # CHANGE THIS to your GitHub username
       WOODPECKER_OPEN: "false"
       WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
