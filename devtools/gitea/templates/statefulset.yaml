@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "gitea.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gitea.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "gitea.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "gitea.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "gitea.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: gitea
+        image: "{{ .Values.gitea.image.repository }}:{{ .Values.gitea.image.tag }}"
+        imagePullPolicy: {{ .Values.gitea.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.gitea.config.server.HTTP_PORT }}
+          protocol: TCP
+        - name: ssh
+          containerPort: {{ .Values.gitea.config.server.SSH_PORT }}
+          protocol: TCP
+        env:
+        - name: USER_UID
+          value: "1000"
+        - name: USER_GID
+          value: "1000"
+        {{- if .Values.gitea.admin.username }}
+        - name: GITEA__security__INSTALL_LOCK
+          value: "false"
+        - name: GITEA_ADMIN_USERNAME
+          value: {{ .Values.gitea.admin.username }}
+        - name: GITEA_ADMIN_PASSWORD
+          value: {{ .Values.gitea.admin.password }}
+        - name: GITEA_ADMIN_EMAIL
+          value: {{ .Values.gitea.admin.email }}
+        {{- end }}
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /etc/gitea/conf
+        resources:
+          {{- toYaml .Values.gitea.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /api/healthz
+            port: http
+          initialDelaySeconds: 200
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 10
+        readinessProbe:
+          httpGet:
+            path: /api/healthz
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "gitea.fullname" . }}-config
+      {{- if not .Values.gitea.persistence.enabled }}
+      - name: data
+        emptyDir: {}
+      {{- end }}
+  {{- if .Values.gitea.persistence.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+        {{- range .Values.gitea.persistence.accessModes }}
+        - {{ . }}
+        {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.gitea.persistence.size }}
+      {{- if .Values.gitea.persistence.storageClass }}
+      storageClassName: {{ .Values.gitea.persistence.storageClass }}
+      {{- end }}
+  {{- end }}

@@ -1,0 +1,107 @@
+# Custom values for Gitea Helm chart - Portable Configuration
+# Works on any network using port-forward to localhost:3000
+
+gitea:
+  image:
+    repository: gitea/gitea
+    tag: 1.22.0
+    pullPolicy: IfNotPresent
+    rootless: true  # Run as non-root user for security
+
+  service:
+    http:
+      type: ClusterIP
+      port: 3000
+    ssh:
+      type: ClusterIP
+      port: 22
+
+  ingress:
+    enabled: false  # Using port-forward for local access
+
+  # Gitea configuration
+  config:
+    APP_NAME: "Gitea: Git with a cup of tea"
+    RUN_MODE: prod
+    
+    server:
+      PROTOCOL: http
+      DOMAIN: localhost
+      ROOT_URL: http://localhost:3000
+      HTTP_PORT: 3000
+      DISABLE_SSH: false
+      SSH_PORT: 22
+      START_SSH_SERVER: true
+      LFS_START_SERVER: true
+    
+    database:
+      DB_TYPE: sqlite3
+      PATH: /data/gitea.db
+    
+    repository:
+      ROOT: /data/git/repositories
+      SCRIPT_TYPE: bash
+      DEFAULT_BRANCH: main
+      DEFAULT_PRIVATE: false
+    
+    security:
+      INSTALL_LOCK: false  # Allow initial setup
+      SECRET_KEY: ""  # Will be auto-generated
+      INTERNAL_TOKEN: ""  # Will be auto-generated
+    
+    service:
+      DISABLE_REGISTRATION: false
+      REQUIRE_SIGNIN_VIEW: false
+      REGISTER_EMAIL_CONFIRM: false
+      ENABLE_NOTIFY_MAIL: false
+      DEFAULT_KEEP_EMAIL_PRIVATE: true
+      DEFAULT_ALLOW_CREATE_ORGANIZATION: true
+      DEFAULT_ENABLE_TIMETRACKING: true
+    
+    webhook:
+      ALLOWED_HOST_LIST: "*"
+    
+    mailer:
+      ENABLED: false
+    
+    openid:
+      ENABLE_OPENID_SIGNIN: true
+      ENABLE_OPENID_SIGNUP: true
+    
+    oauth2:
+      ENABLE: true
+
+  # Admin user configuration (created on first startup)
+  admin:
+    username: gitea_admin
+    password: changeme  # CHANGE THIS! Generate with: openssl rand -base64 32
+    email: admin@example.com
+
+  # Resource limits
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Persistence configuration
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+    accessModes:
+      - ReadWriteOnce
+
+  # PostgreSQL (disabled - using SQLite for simplicity)
+  postgresql:
+    enabled: false
+
+  # Redis cache (optional, disabled by default)
+  redis-cluster:
+    enabled: false
+
+  # Memcached (optional, disabled by default)
+  memcached:
+    enabled: false

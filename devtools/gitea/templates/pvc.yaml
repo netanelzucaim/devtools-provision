@@ -1,0 +1,20 @@
+{{- if .Values.gitea.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "gitea.fullname" . }}-data
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gitea.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- range .Values.gitea.persistence.accessModes }}
+    - {{ . }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.gitea.persistence.size }}
+  {{- if .Values.gitea.persistence.storageClass }}
+  storageClassName: {{ .Values.gitea.persistence.storageClass }}
+  {{- end }}
+{{- end }}
