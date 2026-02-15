@@ -15,7 +15,7 @@ woodpecker:
     replicas: 1
     
     env:
-      WOODPECKER_HOST: http://localhost:8000
+      WOODPECKER_HOST: https://lie-driving-sri-securities.trycloudflare.com
       WOODPECKER_ADMIN: netanelzucaim  # CHANGE THIS to your GitHub username
       WOODPECKER_OPEN: "false"
       WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
