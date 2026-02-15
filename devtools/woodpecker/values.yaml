@@ -21,8 +21,8 @@ woodpecker:
       WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
       # GitHub OAuth Configuration
       WOODPECKER_GITHUB: "true"
-      WOODPECKER_GITHUB_CLIENT: "Iv23liseFiOKeDH5ktZy"  # Get from GitHub OAuth App settings
-      WOODPECKER_GITHUB_SECRET: "14865a2a71597e427432b67e48c4251874687e4f"  # Get from GitHub OAuth App settings
+      WOODPECKER_GITHUB_CLIENT: "Ov23lizbAG3Sg3ekEsQp"  # Get from GitHub OAuth App settings
+      WOODPECKER_GITHUB_SECRET: "e1c2778708bff1901dd19e20e3398c3a5c1dbb42"  # Get from GitHub OAuth App settings
     
     service:
       type: ClusterIP
