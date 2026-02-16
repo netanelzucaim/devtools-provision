@@ -106,6 +106,7 @@ gitea:
   postgresql-ha:
     enabled: false
 
+
   # -- PostgreSQL standalone (disabled - using SQLite)
   postgresql:
     enabled: false
