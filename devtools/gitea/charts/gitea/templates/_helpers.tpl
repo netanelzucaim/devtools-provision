@@ -26,6 +26,13 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/*
+Create a default worker name.
+*/}}
+{{- define "gitea.workername" -}}
+{{- printf "%s-%s" .global.Release.Name .worker | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "gitea.chart" -}}
@@ -92,11 +99,25 @@ version: {{ .Values.image.tag | default .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
+{{- define "gitea.labels.actRunner" -}}
+helm.sh/chart: {{ include "gitea.chart" . }}
+app: {{ include "gitea.name" . }}-act-runner
+{{ include "gitea.selectorLabels.actRunner" . }}
+app.kubernetes.io/version: {{ .Values.image.tag | default .Chart.AppVersion | quote }}
+version: {{ .Values.image.tag | default .Chart.AppVersion | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
 {{/*
 Selector labels
 */}}
 {{- define "gitea.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "gitea.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{- define "gitea.selectorLabels.actRunner" -}}
+app.kubernetes.io/name: {{ include "gitea.name" . }}-act-runner
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
@@ -112,29 +133,29 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
-{{- define "redis.dns" -}}
-{{- if and ((index .Values "redis-cluster").enabled) ((index .Values "redis").enabled) -}}
-{{- fail "redis and redis-cluster cannot be enabled at the same time. Please only choose one." -}}
-{{- else if (index .Values "redis-cluster").enabled -}}
-{{- printf "redis+cluster://:%s@%s-redis-cluster-headless.%s.svc.%s:%g/0?pool_size=100&idle_timeout=180s&" (index .Values "redis-cluster").global.redis.password .Release.Name .Release.Namespace .Values.clusterDomain (index .Values "redis-cluster").service.ports.redis -}}
-{{- else if (index .Values "redis").enabled -}}
-{{- printf "redis://:%s@%s-redis-headless.%s.svc.%s:%g/0?pool_size=100&idle_timeout=180s&" (index .Values "redis").global.redis.password .Release.Name .Release.Namespace .Values.clusterDomain (index .Values "redis").master.service.ports.redis -}}
+{{- define "valkey.dns" -}}
+{{- if and ((index .Values "valkey-cluster").enabled) ((index .Values "valkey").enabled) -}}
+{{- fail "valkey and valkey-cluster cannot be enabled at the same time. Please only choose one." -}}
+{{- else if (index .Values "valkey-cluster").enabled -}}
+{{- printf "redis+cluster://:%s@%s-valkey-cluster-headless.%s.svc.%s:%g/0?pool_size=100&idle_timeout=180s&" (index .Values "valkey-cluster").global.valkey.password .Release.Name .Release.Namespace .Values.clusterDomain (index .Values "valkey-cluster").service.ports.valkey -}}
+{{- else if (index .Values "valkey").enabled -}}
+{{- printf "redis://:%s@%s-valkey-headless.%s.svc.%s:%g/0?pool_size=100&idle_timeout=180s&" (index .Values "valkey").global.valkey.password .Release.Name .Release.Namespace .Values.clusterDomain (index .Values "valkey").master.service.ports.valkey -}}
 {{- end -}}
 {{- end -}}
 
-{{- define "redis.port" -}}
-{{- if (index .Values "redis-cluster").enabled -}}
-{{ (index .Values "redis-cluster").service.ports.redis }}
-{{- else if (index .Values "redis").enabled -}}
-{{ (index .Values "redis").master.service.ports.redis }}
+{{- define "valkey.port" -}}
+{{- if (index .Values "valkey-cluster").enabled -}}
+{{ (index .Values "valkey-cluster").service.ports.valkey }}
+{{- else if (index .Values "valkey").enabled -}}
+{{ (index .Values "valkey").master.service.ports.valkey }}
 {{- end -}}
 {{- end -}}
 
-{{- define "redis.servicename" -}}
-{{- if (index .Values "redis-cluster").enabled -}}
-{{- printf "%s-redis-cluster-headless.%s.svc.%s" .Release.Name .Release.Namespace .Values.clusterDomain -}}
-{{- else if (index .Values "redis").enabled -}}
-{{- printf "%s-redis-headless.%s.svc.%s" .Release.Name .Release.Namespace .Values.clusterDomain -}}
+{{- define "valkey.servicename" -}}
+{{- if (index .Values "valkey-cluster").enabled -}}
+{{- printf "%s-valkey-cluster-headless.%s.svc.%s" .Release.Name .Release.Namespace .Values.clusterDomain -}}
+{{- else if (index .Values "valkey").enabled -}}
+{{- printf "%s-valkey-headless.%s.svc.%s" .Release.Name .Release.Namespace .Values.clusterDomain -}}
 {{- end -}}
 {{- end -}}
 
@@ -263,6 +284,9 @@ https
   {{- if not (hasKey .Values.gitea.config "indexer") -}}
     {{- $_ := set .Values.gitea.config "indexer" dict -}}
   {{- end -}}
+  {{- if not (hasKey .Values.gitea.config "actions") -}}
+    {{- $_ := set .Values.gitea.config "actions" dict -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "gitea.inline_configuration.defaults" -}}
@@ -278,14 +302,17 @@ https
   {{- if not (hasKey .Values.gitea.config.metrics "ENABLED") -}}
     {{- $_ := set .Values.gitea.config.metrics "ENABLED" .Values.gitea.metrics.enabled -}}
   {{- end -}}
-  {{- /* redis queue */ -}}
-  {{- if or ((index .Values "redis-cluster").enabled) ((index .Values "redis").enabled) -}}
+  {{- if and (not (hasKey .Values.gitea.config.metrics "TOKEN")) (.Values.gitea.metrics.token) (.Values.gitea.metrics.enabled) -}}
+    {{- $_ := set .Values.gitea.config.metrics "TOKEN" .Values.gitea.metrics.token -}}
+  {{- end -}}
+  {{- /* valkey queue */ -}}
+  {{- if or ((index .Values "valkey-cluster").enabled) ((index .Values "valkey").enabled) -}}
     {{- $_ := set .Values.gitea.config.queue "TYPE" "redis" -}}
-    {{- $_ := set .Values.gitea.config.queue "CONN_STR" (include "redis.dns" .) -}}
+    {{- $_ := set .Values.gitea.config.queue "CONN_STR" (include "valkey.dns" .) -}}
     {{- $_ := set .Values.gitea.config.session "PROVIDER" "redis" -}}
-    {{- $_ := set .Values.gitea.config.session "PROVIDER_CONFIG" (include "redis.dns" .) -}}
+    {{- $_ := set .Values.gitea.config.session "PROVIDER_CONFIG" (include "valkey.dns" .) -}}
     {{- $_ := set .Values.gitea.config.cache "ADAPTER" "redis" -}}
-    {{- $_ := set .Values.gitea.config.cache "HOST" (include "redis.dns" .) -}}
+    {{- $_ := set .Values.gitea.config.cache "HOST" (include "valkey.dns" .) -}}
   {{- else -}}
     {{- if not (get .Values.gitea.config.session "PROVIDER") -}}
       {{- $_ := set .Values.gitea.config.session "PROVIDER" "memory" -}}
@@ -334,16 +361,18 @@ https
   {{- if not .Values.gitea.config.server.SSH_PORT -}}
     {{- $_ := set .Values.gitea.config.server "SSH_PORT" .Values.service.ssh.port -}}
   {{- end -}}
-  {{- if not (hasKey .Values.gitea.config.server "SSH_LISTEN_PORT") -}}
-    {{- if not .Values.image.rootless -}}
-      {{- $_ := set .Values.gitea.config.server "SSH_LISTEN_PORT" .Values.gitea.config.server.SSH_PORT -}}
-    {{- else -}}
-      {{- $_ := set .Values.gitea.config.server "SSH_LISTEN_PORT" "2222" -}}
-    {{- end -}}
-  {{- end -}}
   {{- if not (hasKey .Values.gitea.config.server "START_SSH_SERVER") -}}
     {{- if .Values.image.rootless -}}
       {{- $_ := set .Values.gitea.config.server "START_SSH_SERVER" "true" -}}
+      {{- if not (hasKey .Values.gitea.config.server "SSH_LISTEN_PORT") -}}
+        {{- if not .Values.gitea.config.server.SSH_LISTEN_PORT -}}
+          {{- $_ := set .Values.gitea.config.server "SSH_LISTEN_PORT" .Values.gitea.config.server.SSH_PORT -}}
+        {{- else -}}
+          {{- $_ := set .Values.gitea.config.server "SSH_LISTEN_PORT" .Values.gitea.config.server.SSH_LISTEN_PORT -}}
+        {{- end -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $_ := set .Values.gitea.config.server "START_SSH_SERVER" "false" -}}
     {{- end -}}
   {{- end -}}
   {{- if not (hasKey .Values.gitea.config.server "APP_DATA_PATH") -}}
@@ -401,10 +430,44 @@ https
 {{ .Values.serviceAccount.name | default (include "gitea.fullname" .) }}
 {{- end -}}
 
+{{- define "ingress.annotations" -}}
+  {{- if .Values.ingress.annotations }}
+  annotations:
+    {{- $tp := typeOf .Values.ingress.annotations }}
+    {{- if eq $tp "string" }}
+      {{- tpl .Values.ingress.annotations . | nindent 4 }}
+    {{- else }}
+      {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+
 {{- define "gitea.admin.passwordMode" -}}
 {{- if has .Values.gitea.admin.passwordMode (tuple "keepUpdated" "initialOnlyNoReset" "initialOnlyRequireReset") -}}
 {{ .Values.gitea.admin.passwordMode }}
 {{- else -}}
 {{ printf "gitea.admin.passwordMode must be set to one of 'keepUpdated', 'initialOnlyNoReset', or 'initialOnlyRequireReset'. Received: '%s'" .Values.gitea.admin.passwordMode | fail }}
 {{- end -}}
+{{- end -}}
+
+{{/* Create a functioning probe object for rendering. Given argument must be either a livenessProbe, readinessProbe, or startupProbe */}}
+{{- define "gitea.deployment.probe" -}}
+  {{- $probe := unset . "enabled" -}}
+  {{- $probeKeys := keys $probe -}}
+  {{- $containsCustomMethod := false -}}
+  {{- $chartDefaultMethod := "tcpSocket" -}}
+  {{- $nonChartDefaultMethods := list "exec" "httpGet" "grpc" -}}
+  {{- range $probeKeys -}}
+    {{- if has . $nonChartDefaultMethods -}}
+      {{- $containsCustomMethod = true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if $containsCustomMethod -}}
+    {{- $probe = unset . $chartDefaultMethod -}}
+  {{- end -}}
+  {{- toYaml $probe -}}
+{{- end -}}
+
+{{- define "gitea.metrics-secret-name" -}}
+{{ default (printf "%s-metrics-secret" (include "gitea.fullname" .)) }}
 {{- end -}}

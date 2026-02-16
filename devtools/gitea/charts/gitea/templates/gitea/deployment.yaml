@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "gitea.fullname" . }}
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
   annotations:
     {{- if .Values.deployment.annotations }}
     {{- toYaml .Values.deployment.annotations | nindent 4 }}
@@ -23,9 +24,6 @@ spec:
   selector:
     matchLabels:
       {{- include "gitea.selectorLabels" . | nindent 6 }}
-      {{- if .Values.deployment.labels }}
-      {{- toYaml .Values.deployment.labels | nindent 6 }}
-      {{- end }}
   template:
     metadata:
       annotations:
@@ -58,10 +56,14 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
+        {{- if .Values.preExtraInitContainers }}
+        {{- toYaml .Values.preExtraInitContainers | nindent 8 }}
+        {{- end }}
         - name: init-directories
           image: "{{ include "gitea.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/usr/sbin/init_directory_structure.sh"]
+          command:
+            - "{{ .Values.initContainersScriptsVolumeMountPath }}/init_directory_structure.sh"
           env:
             - name: GITEA_APP_INI
               value: /data/gitea/conf/app.ini
@@ -80,7 +82,7 @@ spec:
             {{- end }}
           volumeMounts:
             - name: init
-              mountPath: /usr/sbin
+              mountPath: {{ .Values.initContainersScriptsVolumeMountPath }}
             - name: temp
               mountPath: /tmp
             - name: data
@@ -96,7 +98,8 @@ spec:
         - name: init-app-ini
           image: "{{ include "gitea.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["/usr/sbin/config_environment.sh"]
+          command:
+          - "{{ .Values.initContainersScriptsVolumeMountPath }}/config_environment.sh"
           env:
             - name: GITEA_APP_INI
               value: /data/gitea/conf/app.ini
@@ -106,15 +109,19 @@ spec:
               value: /data
             - name: GITEA_TEMP
               value: /tmp/gitea
+            - name: TMP_EXISTING_ENVS_FILE
+              value: /tmp/existing-envs
+            - name: ENV_TO_INI_MOUNT_POINT
+              value: /env-to-ini-mounts
             {{- if .Values.deployment.env }}
             {{- toYaml .Values.deployment.env | nindent 12 }}
             {{- end }}
             {{- if .Values.gitea.additionalConfigFromEnvs }}
-            {{- toYaml .Values.gitea.additionalConfigFromEnvs | nindent 12 }}
+            {{- tpl (toYaml .Values.gitea.additionalConfigFromEnvs) $ | nindent 12 }}
             {{- end }}
           volumeMounts:
             - name: config
-              mountPath: /usr/sbin
+              mountPath: {{ .Values.initContainersScriptsVolumeMountPath }}
             - name: temp
               mountPath: /tmp
             - name: data
@@ -136,7 +143,8 @@ spec:
         {{- if .Values.signing.enabled }}
         - name: configure-gpg
           image: "{{ include "gitea.image" . }}"
-          command: ["/usr/sbin/configure_gpg_environment.sh"]
+          command:
+          - "{{ .Values.initContainersScriptsVolumeMountPath }}/configure_gpg_environment.sh"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- /* By default this container runs as user 1000 unless otherwise stated */ -}}
@@ -148,9 +156,11 @@ spec:
           env:
             - name: GNUPGHOME
               value: {{ .Values.signing.gpgHome }}
+            - name: TMP_RAW_GPG_KEY
+              value: /raw/private.asc
           volumeMounts:
             - name: init
-              mountPath: /usr/sbin
+              mountPath: {{ .Values.initContainersScriptsVolumeMountPath }}
             - name: data
               mountPath: /data
               {{- if .Values.persistence.subPath }}
@@ -167,7 +177,8 @@ spec:
         {{- end }}
         - name: configure-gitea
           image: "{{ include "gitea.image" . }}"
-          command: ["/usr/sbin/configure_gitea.sh"]
+          command:
+          - "{{ .Values.initContainersScriptsVolumeMountPath }}/configure_gitea.sh"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- /* By default this container runs as user 1000 unless otherwise stated */ -}}
@@ -250,7 +261,7 @@ spec:
             {{- end }}
           volumeMounts:
             - name: init
-              mountPath: /usr/sbin
+              mountPath: {{ .Values.initContainersScriptsVolumeMountPath }}
             - name: temp
               mountPath: /tmp
             - name: data
@@ -261,6 +272,9 @@ spec:
             {{- include "gitea.init-additional-mounts" . | nindent 12 }}
           resources:
             {{- toYaml .Values.initContainers.resources | nindent 12 }}
+        {{- if .Values.postExtraInitContainers }}
+        {{- toYaml .Values.postExtraInitContainers | nindent 8 }}
+        {{- end }}
       terminationGracePeriodSeconds: {{ .Values.deployment.terminationGracePeriodSeconds }}
       containers:
         - name: {{ .Chart.Name }}
@@ -284,6 +298,13 @@ spec:
               value: /data
             - name: GITEA_TEMP
               value: /tmp/gitea
+            {{- if and (hasKey .Values.resources "limits") (hasKey .Values.resources.limits "cpu") }}
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  divisor: "1"
+                  resource: limits.cpu
+            {{- end }}
             - name: TMPDIR
               value: /tmp/gitea
             {{- if .Values.image.rootless }}
@@ -311,15 +332,15 @@ spec:
             {{- end }}
           {{- if .Values.gitea.livenessProbe.enabled }}
           livenessProbe:
-            {{- toYaml (omit .Values.gitea.livenessProbe "enabled") | nindent 12 }}
+            {{- include "gitea.deployment.probe" .Values.gitea.livenessProbe | nindent 12 }}
           {{- end }}
           {{- if .Values.gitea.readinessProbe.enabled }}
           readinessProbe:
-            {{- toYaml (omit .Values.gitea.readinessProbe "enabled") | nindent 12 }}
+            {{- include "gitea.deployment.probe" .Values.gitea.readinessProbe | nindent 12 }}
           {{- end }}
           {{- if .Values.gitea.startupProbe.enabled }}
           startupProbe:
-            {{- toYaml (omit .Values.gitea.startupProbe "enabled") | nindent 12 }}
+            {{- include "gitea.deployment.probe" .Values.gitea.startupProbe | nindent 12 }}
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -339,6 +360,9 @@ spec:
               subPath: {{ .Values.persistence.subPath }}
               {{- end }}
             {{- include "gitea.container-additional-mounts" . | nindent 12 }}
+        {{- if .Values.extraContainers }}
+        {{- toYaml .Values.extraContainers | nindent 8 }}
+        {{- end }}
       {{- with .Values.global.hostAliases }}
       hostAliases:
         {{- toYaml . | nindent 8 }}
@@ -352,7 +376,7 @@ spec:
         {{- toYaml . | nindent 8 }}
     {{- end }}
     {{- with .Values.topologySpreadConstraints }}
-      topologySpreadConstraints: 
+      topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
     {{- end }}
     {{- with .Values.tolerations }}

@@ -1,29 +1,55 @@
-# Custom values for Gitea Helm chart - Portable Configuration
+# Custom values for Gitea Helm chart v12.5.0 (appVersion 1.25.4)
 # Works on any network using port-forward to localhost:3000
 
+# -- Image configuration (top-level, not under gitea:)
+image:
+  registry: "docker.gitea.com"
+  repository: gitea
+  tag: ""  # Defaults to appVersion (1.25.4)
+  pullPolicy: IfNotPresent
+  rootless: true
+
+# -- Service configuration
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+  ssh:
+    type: ClusterIP
+    port: 22
+
+# -- Ingress
+ingress:
+  enabled: false
+
+# -- Resources
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# -- Persistence
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: standard
+  accessModes:
+    - ReadWriteOnce
+
+# -- Gitea application configuration
 gitea:
-  image:
-    repository: gitea/gitea
-    tag: 1.22.0
-    pullPolicy: IfNotPresent
-    rootless: true  # Run as non-root user for security
+  admin:
+    username: gitea_admin
+    password: changeme  # ⚠️ CHANGE THIS!
+    email: admin@example.com
 
-  service:
-    http:
-      type: ClusterIP
-      port: 3000
-    ssh:
-      type: ClusterIP
-      port: 22
-
-  ingress:
-    enabled: false  # Using port-forward for local access
-
-  # Gitea configuration
   config:
     APP_NAME: "Gitea: Git with a cup of tea"
     RUN_MODE: prod
-    
+
     server:
       PROTOCOL: http
       DOMAIN: localhost
@@ -31,27 +57,28 @@ gitea:
       HTTP_PORT: 3000
       DISABLE_SSH: false
       SSH_PORT: 22
+      SSH_LISTEN_PORT: 2222
       START_SSH_SERVER: true
       LFS_START_SERVER: true
-    
+
     log:
       LEVEL: Debug
-    
+
     database:
       DB_TYPE: sqlite3
       PATH: /data/gitea.db
-    
+
     repository:
       ROOT: /data/git/repositories
       SCRIPT_TYPE: bash
       DEFAULT_BRANCH: main
       DEFAULT_PRIVATE: false
-    
+
     security:
-      INSTALL_LOCK: false  # Allow initial setup
-      SECRET_KEY: ""  # Will be auto-generated
-      INTERNAL_TOKEN: ""  # Will be auto-generated
-    
+      INSTALL_LOCK: false
+      SECRET_KEY: ""
+      INTERNAL_TOKEN: ""
+
     service:
       DISABLE_REGISTRATION: false
       REQUIRE_SIGNIN_VIEW: false
@@ -60,55 +87,32 @@ gitea:
       DEFAULT_KEEP_EMAIL_PRIVATE: true
       DEFAULT_ALLOW_CREATE_ORGANIZATION: true
       DEFAULT_ENABLE_TIMETRACKING: true
-    
+
     webhook:
       ALLOWED_HOST_LIST: "*"
-    
+
     mailer:
       ENABLED: false
-    
+
     openid:
       ENABLE_OPENID_SIGNIN: true
       ENABLE_OPENID_SIGNUP: true
-    
+
     oauth2:
       ENABLE: true
 
-  # Admin user configuration (created on first startup)
-  # ⚠️ SECURITY WARNING: The default password below is insecure!
-  # ALWAYS change this to a secure password, even for local development.
-  # Generate one with: openssl rand -base64 32
-  # Or use --set gitea.admin.password="your-secure-password" during installation
-  admin:
-    username: gitea_admin
-    password: changeme  # ⚠️ CHANGE THIS IMMEDIATELY!
-    email: admin@example.com
+# -- PostgreSQL HA (disabled - using SQLite)
+postgresql-ha:
+  enabled: false
 
-  # Resource limits
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
+# -- PostgreSQL standalone (disabled - using SQLite)
+postgresql:
+  enabled: false
 
-  # Persistence configuration
-  persistence:
-    enabled: true
-    size: 10Gi
-    storageClass: standard
-    accessModes:
-      - ReadWriteOnce
+# -- Valkey cluster (replaces old redis-cluster)
+valkey-cluster:
+  enabled: false
 
-  # PostgreSQL (disabled - using SQLite for simplicity)
-  postgresql:
-    enabled: false
-
-  # Redis cache (optional, disabled by default)
-  redis-cluster:
-    enabled: false
-
-  # Memcached (optional, disabled by default)
-  memcached:
-    enabled: false
+# -- Valkey standalone
+valkey:
+  enabled: false
