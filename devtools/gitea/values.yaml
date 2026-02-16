@@ -1,118 +1,119 @@
-# Custom values for Gitea Helm chart v12.5.0 (appVersion 1.25.4)
-# Works on any network using port-forward to localhost:3000
+  # Custom values for Gitea Helm chart v12.5.0 (appVersion 1.25.4)
+  # Works on any network using port-forward to localhost:3000
 
-# -- Image configuration (top-level, not under gitea:)
-image:
-  registry: "docker.gitea.com"
-  repository: gitea
-  tag: ""  # Defaults to appVersion (1.25.4)
-  pullPolicy: IfNotPresent
-  rootless: true
-
-# -- Service configuration
-service:
-  http:
-    type: ClusterIP
-    port: 3000
-  ssh:
-    type: ClusterIP
-    port: 22
-
-# -- Ingress
-ingress:
-  enabled: false
-
-# -- Resources
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-
-# -- Persistence
-persistence:
-  enabled: true
-  size: 10Gi
-  storageClass: standard
-  accessModes:
-    - ReadWriteOnce
-
-# -- Gitea application configuration
+  # -- Image configuration (top-level, not under gitea:)
 gitea:
-  admin:
-    username: gitea_admin
-    password: changeme  # ⚠️ CHANGE THIS!
-    email: admin@example.com
+  image:
+    registry: "docker.gitea.com"
+    repository: gitea
+    tag: ""  # Defaults to appVersion (1.25.4)
+    pullPolicy: IfNotPresent
+    rootless: true
 
-  config:
-    APP_NAME: "Gitea: Git with a cup of tea"
-    RUN_MODE: prod
+  # -- Service configuration
+  service:
+    http:
+      type: ClusterIP
+      port: 3000
+    ssh:
+      type: ClusterIP
+      port: 22
 
-    server:
-      PROTOCOL: http
-      DOMAIN: localhost
-      ROOT_URL: http://localhost:3000
-      HTTP_PORT: 3000
-      DISABLE_SSH: false
-      SSH_PORT: 22
-      SSH_LISTEN_PORT: 2222
-      START_SSH_SERVER: true
-      LFS_START_SERVER: true
+  # -- Ingress
+  ingress:
+    enabled: false
 
-    log:
-      LEVEL: Debug
+  # -- Resources
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
-    database:
-      DB_TYPE: sqlite3
-      PATH: /data/gitea.db
+  # -- Persistence
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+    accessModes:
+      - ReadWriteOnce
 
-    repository:
-      ROOT: /data/git/repositories
-      SCRIPT_TYPE: bash
-      DEFAULT_BRANCH: main
-      DEFAULT_PRIVATE: false
+  # -- Gitea application configuration
+  gitea:
+    admin:
+      username: gitea_admin
+      password: changeme  # ⚠️ CHANGE THIS!
+      email: admin@example.com
 
-    security:
-      INSTALL_LOCK: false
-      SECRET_KEY: ""
-      INTERNAL_TOKEN: ""
+    config:
+      APP_NAME: "Gitea: Git with a cup of tea"
+      RUN_MODE: prod
 
-    service:
-      DISABLE_REGISTRATION: false
-      REQUIRE_SIGNIN_VIEW: false
-      REGISTER_EMAIL_CONFIRM: false
-      ENABLE_NOTIFY_MAIL: false
-      DEFAULT_KEEP_EMAIL_PRIVATE: true
-      DEFAULT_ALLOW_CREATE_ORGANIZATION: true
-      DEFAULT_ENABLE_TIMETRACKING: true
+      server:
+        PROTOCOL: http
+        DOMAIN: localhost
+        ROOT_URL: http://localhost:3000
+        HTTP_PORT: 3000
+        DISABLE_SSH: false
+        SSH_PORT: 22
+        SSH_LISTEN_PORT: 2222
+        START_SSH_SERVER: true
+        LFS_START_SERVER: true
 
-    webhook:
-      ALLOWED_HOST_LIST: "*"
+      log:
+        LEVEL: Debug
 
-    mailer:
-      ENABLED: false
+      database:
+        DB_TYPE: sqlite3
+        PATH: /data/gitea.db
 
-    openid:
-      ENABLE_OPENID_SIGNIN: true
-      ENABLE_OPENID_SIGNUP: true
+      repository:
+        ROOT: /data/git/repositories
+        SCRIPT_TYPE: bash
+        DEFAULT_BRANCH: main
+        DEFAULT_PRIVATE: false
 
-    oauth2:
-      ENABLE: true
+      security:
+        INSTALL_LOCK: false
+        SECRET_KEY: ""
+        INTERNAL_TOKEN: ""
 
-# -- PostgreSQL HA (disabled - using SQLite)
-postgresql-ha:
-  enabled: false
+      service:
+        DISABLE_REGISTRATION: false
+        REQUIRE_SIGNIN_VIEW: false
+        REGISTER_EMAIL_CONFIRM: false
+        ENABLE_NOTIFY_MAIL: false
+        DEFAULT_KEEP_EMAIL_PRIVATE: true
+        DEFAULT_ALLOW_CREATE_ORGANIZATION: true
+        DEFAULT_ENABLE_TIMETRACKING: true
 
-# -- PostgreSQL standalone (disabled - using SQLite)
-postgresql:
-  enabled: false
+      webhook:
+        ALLOWED_HOST_LIST: "*"
 
-# -- Valkey cluster (replaces old redis-cluster)
-valkey-cluster:
-  enabled: false
+      mailer:
+        ENABLED: false
 
-# -- Valkey standalone
-valkey:
-  enabled: false
+      openid:
+        ENABLE_OPENID_SIGNIN: true
+        ENABLE_OPENID_SIGNUP: true
+
+      oauth2:
+        ENABLE: true
+
+  # -- PostgreSQL HA (disabled - using SQLite)
+  postgresql-ha:
+    enabled: false
+
+  # -- PostgreSQL standalone (disabled - using SQLite)
+  postgresql:
+    enabled: false
+
+  # -- Valkey cluster (replaces old redis-cluster)
+  valkey-cluster:
+    enabled: false
+
+  # -- Valkey standalone
+  valkey:
+    enabled: false
