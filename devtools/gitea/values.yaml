@@ -53,8 +53,8 @@ gitea:
 
       server:
         PROTOCOL: http
-        DOMAIN: localhost
-        ROOT_URL: http://localhost:3000
+        DOMAIN: gitea-http.gitea.svc.cluster.local
+        ROOT_URL: http://gitea-http.gitea.svc.cluster.local:3000
         HTTP_PORT: 3000
         DISABLE_SSH: false
         SSH_PORT: 22
