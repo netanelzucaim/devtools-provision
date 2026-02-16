@@ -21,7 +21,7 @@ woodpecker:
       WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
       # Gitea OAuth2 Configuration
       WOODPECKER_GITEA: "true"
-      WOODPECKER_GITEA_URL: http://gitea-http.gitea.svc.cluster.local:3000
+      WOODPECKER_GITEA_URL: http://localhost:3000
       WOODPECKER_GITEA_CLIENT: "62a5a32e-271b-4fab-80f4-1c0367017530"
       WOODPECKER_GITEA_SECRET: "gto_y6ewbigjmregtltheedvka4ou2hovwbdxxuqdm5uhlfmpswu4sya"
       WOODPECKER_GITEA_SKIP_VERIFY: "true"
