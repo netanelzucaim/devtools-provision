@@ -35,7 +35,7 @@ gitea:
   # -- Persistence
   persistence:
     enabled: true
-    size: 10Gi
+    size: 14Gi
     storageClass: standard
     accessModes:
       - ReadWriteOnce

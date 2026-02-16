@@ -1,5 +1,5 @@
 # Custom values for Woodpecker CI Helm chart - Portable Configuration
-# Works on any network using port-forward to localhost:9000
+# Works on localhost with Gitea as the forge
 
 # SECURITY WARNING: The WOODPECKER_AGENT_SECRET below is set to a default value
 # for demonstration purposes. For production use, you MUST change this to a secure,
@@ -15,14 +15,18 @@ woodpecker:
     replicas: 1
     
     env:
-      WOODPECKER_HOST: https://selling-adrian-nose-rated.trycloudflare.com 
-      WOODPECKER_ADMIN: netanelzucaim  # CHANGE THIS to your GitHub username
+      WOODPECKER_HOST: http://localhost:8000
+      WOODPECKER_ADMIN: netanelzucaim
       WOODPECKER_OPEN: "false"
       WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
-      # GitHub OAuth Configuration
-      WOODPECKER_GITHUB: "true"
-      WOODPECKER_GITHUB_CLIENT: "Ov23lizbAG3Sg3ekEsQp"  # Get from GitHub OAuth App settings
-      WOODPECKER_GITHUB_SECRET: "e1c2778708bff1901dd19e20e3398c3a5c1dbb42"  # Get from GitHub OAuth App settings
+      # Gitea OAuth2 Configuration
+      WOODPECKER_GITEA: "true"
+      WOODPECKER_GITEA_URL: http://gitea-http.gitea.svc.cluster.local:3000
+      WOODPECKER_GITEA_CLIENT: "62a5a32e-271b-4fab-80f4-1c0367017530"
+      WOODPECKER_GITEA_SECRET: "gto_y6ewbigjmregtltheedvka4ou2hovwbdxxuqdm5uhlfmpswu4sya"
+      WOODPECKER_GITEA_SKIP_VERIFY: "true"
+      # Disable GitHub
+      WOODPECKER_GITHUB: "false"
     
     service:
       type: ClusterIP
