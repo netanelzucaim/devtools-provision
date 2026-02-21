@@ -7,7 +7,6 @@
 
 woodpecker:
   server:
-    image:
     replicas: 1
     
     env:
