@@ -8,10 +8,6 @@
 woodpecker:
   server:
     image:
-      repository: woodpeckerci/woodpecker-server
-      tag: v2.7.0
-      pullPolicy: IfNotPresent
-    
     replicas: 1
     
     env:
@@ -51,12 +47,7 @@ woodpecker:
   agent:
     enabled: true
     replicaCount: 1
-    
-    image:
-      repository: woodpeckerci/woodpecker-agent
-      tag: v2.7.0
-      pullPolicy: IfNotPresent
-    
+      
     env:
       WOODPECKER_SERVER: woodpecker-server:9000
       WOODPECKER_AGENT_SECRET: changeme  # MUST match server secret! Change both!
