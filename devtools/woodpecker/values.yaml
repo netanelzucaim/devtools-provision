@@ -10,7 +10,7 @@ woodpecker:
     replicas: 1
     
     env:
-      WOODPECKER_HOST: http://localhost:8000
+      WOODPECKER_HOST: http://woodpecker-server.woodpecker.svc.cluster.local:8000
       WOODPECKER_ADMIN: netanelzucaim
       WOODPECKER_OPEN: "false"
       WOODPECKER_AGENT_SECRET: changeme  # CHANGE THIS! Generate with: openssl rand -hex 32
