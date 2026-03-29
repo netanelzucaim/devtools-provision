@@ -17,8 +17,8 @@ woodpecker:
       # Gitea OAuth2 Configuration
       WOODPECKER_GITEA: "true"
       WOODPECKER_GITEA_URL: http://gitea-http.gitea.svc.cluster.local:3000
-      WOODPECKER_GITEA_CLIENT: "62a5a32e-271b-4fab-80f4-1c0367017530"
-      WOODPECKER_GITEA_SECRET: "gto_y6ewbigjmregtltheedvka4ou2hovwbdxxuqdm5uhlfmpswu4sya"
+      WOODPECKER_GITEA_CLIENT: "9d7bc363-f725-4595-8fa3-c98419cfb9e1"
+      WOODPECKER_GITEA_SECRET: "gto_6tof2sukpewxthaaum7d56bun37sf2tnzw4bfh7zoh4pogmv2xqq"
       WOODPECKER_GITEA_SKIP_VERIFY: "true"
       # Disable GitHub
       WOODPECKER_GITHUB: "false"
